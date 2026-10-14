@@ -11,7 +11,10 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
 
     steps:
       - name: Télécharger le code
@@ -23,16 +26,24 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Préparer Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Vérifier le SDK Android
+        run: |
+          echo "SDK Android : $ANDROID_HOME"
+          ls "$ANDROID_HOME/cmdline-tools"
+          test -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
 
       - name: Accepter les licences Android
-        run: yes | sdkmanager --licenses || true
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
 
       - name: Installer les composants Android
-        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
-      - name: Installer Gradle
+      - name: Préparer Gradle
         uses: gradle/actions/setup-gradle@v4
 
       - name: Compiler APK
